@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap");
-
 *,
 *::before,
 *::after {
@@ -11,30 +9,38 @@
 body {
   width: 100%;
   height: 100dvh;
+  /* body tidak perlu warna latar belakang */
 }
 
 main {
   width: 100%;
-  height: 100%;
+  height: 100dvh;
   display: flex;
   align-items: center;
-  justify-content: center;
-  background-color: black;
+  justify-content: center; /* MEMASTIKAN LOGO DI TENGAH SEMPURNA */
+  /* Menggunakan warna solid sebagai background agar logo tidak terpotong */
+  background-color: #1a1a1a; 
   overflow: hidden;
 }
 
-
-@media (max-width: 768px) {
-  header,
-  header img {
-    height: 40dvh;
-    height: 40vh;
-  }
+/* --- Pengaturan Presisi Default (Desktop/Layar Besar) --- */
+main img {
+  /* Logo mengambil 30% dari lebar viewport. Ini ideal untuk desktop. */
+  width: 30vw; 
+  
+  /* Batasan maksimal: logo tidak akan melebihi 450px di layar yang sangat besar */
+  max-width: 450px; 
+  height: auto;
+  /* object-fit: cover dihapus agar gambar tidak mengisi penuh layar dan terpotong */
 }
 
-@media (min-width: 769px) {
-  header {
-    height: 100dvh;
-    height: 100vh;
+
+/* --- Media Query untuk Mobile (Maksimal 768px) --- */
+@media (max-width: 768px) {
+  main img {
+    /* Meningkatkan ukuran logo di mobile menjadi 70% dari lebar layar agar terlihat jelas */
+    width: 70vw; 
+    /* Max-width dihapus di mobile agar ukuran 70vw bisa diterapkan sepenuhnya */
+    max-width: none;
   }
 }
