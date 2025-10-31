@@ -1,46 +1,151 @@
-*,
-*::before,
-*::after {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&family=Lato:wght@100;400;600;700&display=swap');
+
+:root {
+  --bg-dark: #1a1a1a;
+  --text-logo: #d3d3d3;
+  --text-accent: #f1c40f;
+  --text-content: #ddd;
+  --navbar-logo-color: #555;
 }
 
-body {
-  width: 100%;
-  height: 100dvh;
-  /* body tidak perlu warna latar belakang */
+/* ==== GLOBAL ==== */
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; font-family:'Inter', sans-serif; overflow-x:hidden; scroll-behavior:smooth; background:#000; position: relative; }
+
+.page { position:absolute; width:100%; height:100%; top:0; left:0; opacity:0; pointer-events:none; transition:0.3s ease; box-sizing: border-box; }
+.page.active { opacity:1; pointer-events:all; z-index:10; }
+
+/* ==== PAGE 1 ==== */
+#page1 { display:flex; justify-content:center; align-items:center; text-align:center; cursor:pointer; }
+#page1 .bg-img { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:-1; }
+
+/* ==== TAP ==== */
+.tap { position:absolute; bottom:5vh; left:50%; transform:translateX(-50%); font-weight:600; color:#fff; opacity:0; transition:opacity 1.2s, transform 0.6s; text-shadow:0 0 10px rgba(0,0,0,0.5); cursor:pointer;}
+#tap2 { bottom:8vh; }http://127.0.0.1:5501/images/HOME.jpg
+.tap.show { opacity:1; animation:blink 1.5s infinite alternate;}
+@keyframes blink { from{opacity:1;} to{opacity:0.4;} }
+@keyframes fade-out { from{opacity:1;} to{opacity:0;} }
+
+/* ==== PAGE 2 ==== */
+#page2 { background:#1a1a1a; color:var(--text-content); display:flex; flex-direction:column; align-items:center; text-align:center; padding-top:10vh; cursor:pointer; position:relative; min-height:100vh; }
+#logoText { opacity:0; transition:all 0.8s ease; }
+#logoText.tracking-in { animation:logo-fade-in 1s ease both; }
+@keyframes logo-fade-in { 0%{transform:scale(0.8); opacity:0;} 100%{transform:scale(1); opacity:1;} }
+
+#desc { max-width:750px; font-size:1rem; line-height:1.8; color:var(--text-content); text-align:center; margin:0vh auto 0 auto; padding:0 2vw; opacity:0; transition:0.5s ease; }
+#desc p { margin:2vh 0; opacity:0; transform:translateY(-10px); animation:drop-in 0.4s ease forwards; }
+@keyframes drop-in { from{opacity:0; transform:translateY(-10px);} to{opacity:1; transform:translateY(0);} }
+.highlight { color:#fff; font-size:1.05em; font-weight:600; }
+.italicOnly { font-style:italic; color:#fff; font-size:1.05em; font-weight:600; }
+
+/* ==== HEADER ==== */
+header { justify-content:space-between; align-items:center; padding:1.5vh 4vw; background:#fff; color:#000; z-index:20; position:fixed; top:0; width:100%; transition:0.3s ease; box-shadow: 0 5px 15px rgba(0,0,0,0.2); display:none; }
+header.visible { display:flex; }
+
+.page2-logo { width: 300px; height: auto; object-fit: contain; margin-bottom: 5vh; }
+.navbar-logo { height: 55px; width: auto; object-fit: contain; cursor: pointer; }
+
+.navWrapper { display: flex; align-items: center; gap: 1rem; }
+.navMenu { display:flex; align-items:center; gap:1rem; font-family:'Lato', sans-serif; }
+.navMenu ul { list-style:none; display:flex; gap:1.5rem; }
+.navMenu ul li a {
+  text-decoration:none;
+  color:#000; /* hitam */
+  font-weight:600;
+  padding:0.5rem 1rem;
+  border-radius:8px;
+  transition:0.3s;
+}
+.navMenu ul li a:hover { background:#f1c40f; color:#000; }
+.navMenu ul li a.active { background:var(--text-accent); color:#000; border: none; border-radius:8px; }
+.navIcons { display:flex; gap:1rem; }
+.navIcons a {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  width:40px; height:40px;
+  border-radius:50%;
+  background:var(--text-accent); /* full kuning */
+  color:#000; /* hitam */
+  text-decoration:none;
+  font-size:1.2rem;
+  transition:0.3s;
 }
 
-main {
-  width: 100%;
-  height: 100dvh;
-  display: flex;
-  align-items: center;
-  justify-content: center; /* MEMASTIKAN LOGO DI TENGAH SEMPURNA */
-  /* Menggunakan warna solid sebagai background agar logo tidak terpotong */
-  background-color: #1a1a1a; 
-  overflow: hidden;
-}
+.burger-menu { display: none; font-size: 1.8rem; cursor: pointer; z-index: 30; }
 
-/* --- Pengaturan Presisi Default (Desktop/Layar Besar) --- */
-main img {
-  /* Logo mengambil 30% dari lebar viewport. Ini ideal untuk desktop. */
-  width: 30vw; 
-  
-  /* Batasan maksimal: logo tidak akan melebihi 450px di layar yang sangat besar */
-  max-width: 450px; 
-  height: auto;
-  /* object-fit: cover dihapus agar gambar tidak mengisi penuh layar dan terpotong */
-}
-
-
-/* --- Media Query untuk Mobile (Maksimal 768px) --- */
+/* Media Queries for Responsiveness */
 @media (max-width: 768px) {
-  main img {
-    /* Meningkatkan ukuran logo di mobile menjadi 70% dari lebar layar agar terlihat jelas */
-    width: 70vw; 
-    /* Max-width dihapus di mobile agar ukuran 70vw bisa diterapkan sepenuhnya */
-    max-width: none;
+  .navWrapper { display: none; flex-direction: column; position: fixed; top: 0; right: -100%; width: 70%; height: 100%; background: #fff; box-shadow: -5px 0 15px rgba(0,0,0,0.2); transition: right 0.3s ease-in-out; justify-content: flex-start; align-items: center; padding-top: 10vh; }
+  .navWrapper.menu-open { right: 0; display: flex; }
+  .navMenu ul { flex-direction: column; gap: 1.5rem; text-align: center; }
+  .navIcons { flex-direction: row !important; gap: 1.5rem; margin-top: 2rem; width: 100%; justify-content: center; }
+  .burger-menu { display: block; }
+  header { padding: 1.5vh 5vw; }
+  #page1 .bg-img {
+    content: url('/images/HOME_portrait.jpg');
   }
+}
+
+/* Media Query for iPad/Tablet */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .navMenu ul {
+    gap: 1rem;
+  }
+  .navMenu ul li a {
+    font-size: 0.9rem;
+    padding: 0.5rem;
+  }
+  .logoStyle {
+    font-size: 2rem;
+  }
+}
+#page3 { background:#fff; color:#333; display:flex; flex-direction:column; align-items:center; height:100%; overflow:hidden; overflow-y: hidden; }
+#page4 { background:#fff; color:#333; display:flex; flex-direction:column; align-items:center; height:100%; overflow:hidden; overflow-y: hidden; }
+#page5 { background:#fff; color:#333; display:flex; flex-direction:column; align-items:center; height:100%; overflow:hidden; overflow-y: hidden; }
+#page6 { background:#fff; color:#333; display:flex; flex-direction:column; align-items:center; height:100%; overflow:hidden; overflow-y: hidden; }
+.grid-container { display:flex; flex-direction:row; overflow-x:auto; gap:0.5rem; /* 8px */ scroll-behavior:smooth; width:100%; padding-top: 25vh; padding-bottom: 0.5rem; scroll-snap-type: x mandatory; }
+.grid-item { min-width:320px; height: 60vh; flex-shrink:0; cursor:pointer; border:4px solid transparent; transition: transform 0.4s ease, opacity 0.4s ease, box-shadow 0.4s ease, filter 0.4s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.1); filter: blur(2px); opacity: 0.8; transform: scale(0.95); scroll-snap-align: center; will-change: transform, opacity, filter, box-shadow; }
+.grid-item.active { border-color:var(--text-accent); transform:scale(1.03); box-shadow: 0 8px 20px rgba(0,0,0,0.2); filter: blur(0) grayscale(0); opacity: 1; will-change: transform, opacity, filter, box-shadow; }
+.grid-item img { width:100%; height:100%; object-fit:cover; display:block; }
+
+.nav-arrow { position:absolute; top:50%; transform:translateY(-50%); width:50px; height:50px; background:rgba(0,0,0,0.5); color:#fff; border-radius:50%; display:flex; justify-content:center; align-items:center; cursor:pointer; transition:0.3s; z-index:15; }
+.nav-arrow:hover { background:var(--text-accent); color:#000; }
+.left-arrow { left:2vw; }
+.right-arrow { right:2vw; }
+
+/* For Webkit browsers (Chrome, Safari) */
+.grid-container::-webkit-scrollbar {
+  display: none; /* Hide scrollbar completely */
+}
+
+.grid-container::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Light track */
+  border-radius: 10px;
+}
+
+.grid-container::-webkit-scrollbar-thumb {
+  background: #888; /* Darker thumb */
+  border-radius: 10px;
+}
+
+.grid-container::-webkit-scrollbar-thumb:hover {
+  background: #555; /* Even darker on hover */
+}
+
+@keyframes puff-out {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+    filter: blur(0px);
+  }
+  100% {
+    transform: scale(0.5);
+    opacity: 0;
+    filter: blur(5px);
+  }
+}
+
+.puff-out-animation {
+  animation: puff-out 0.5s ease-out forwards;
 }
