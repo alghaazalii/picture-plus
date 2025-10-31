@@ -42,7 +42,7 @@ html, body { width:100%; height:100%; font-family:'Inter', sans-serif; overflow-
 header { justify-content:space-between; align-items:center; padding:1.5vh 4vw; background:#fff; color:#000; z-index:20; position:fixed; top:0; width:100%; transition:0.3s ease; box-shadow: 0 5px 15px rgba(0,0,0,0.2); display:none; }
 header.visible { display:flex; }
 
-.page2-logo { width: 300px; height: auto; object-fit: contain; margin-bottom: 5vh; }
+.page2-logo { max-width: 300px; width: 80%; height: auto; object-fit: contain; margin-bottom: 5vh; }
 .navbar-logo { height: 55px; width: auto; object-fit: contain; cursor: pointer; }
 
 .navWrapper { display: flex; align-items: center; gap: 1rem; }
@@ -84,6 +84,15 @@ header.visible { display:flex; }
   header { padding: 1.5vh 5vw; }
   #page1 .bg-img {
     content: url('/images/HOME_portrait.jpg');
+  }
+
+  .page2-logo {
+    width: 60%; /* Adjust logo size for mobile */
+    margin-bottom: 2vh; /* Adjust margin for mobile */
+  }
+
+  #page2 {
+    padding-top: 5vh; /* Adjust padding-top for mobile */
   }
 }
 
