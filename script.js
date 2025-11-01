@@ -213,6 +213,10 @@ if (navbarLogo) {
   });
 }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 221f215 (keep script.js from stash)
 // Burger menu toggle
 const burgerMenu = document.querySelector('.burger-menu');
 const navWrapper = document.querySelector('.navWrapper');
