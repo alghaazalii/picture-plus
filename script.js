@@ -7,10 +7,20 @@ const descElement = document.getElementById('desc');
 
 let isTyping = false;
 function goToPage(num) {
+  const navbarLogo = document.getElementById('navbarLogo');
   pages.forEach(p => p.classList.remove('active'));
-  pages[num - 1].classList.add('active');
-  if(num<=2) header.classList.remove('visible');
-  else header.classList.add('visible');
+  const targetPage = pages[num - 1];
+  targetPage.classList.add('active');
+
+  if(num <= 2) {
+    header.classList.remove('visible');
+    navbarLogo.src = '/images/LOGO PICTURE WEB_page 2.png';
+  } else {
+    header.classList.add('visible');
+    navbarLogo.src = '/images/LOGO PICTURE WEB.png';
+    // Initialize gallery for the visible page
+    initializeGallery(targetPage);
+  }
 
   // Reset and restart animations for page1 and page2
   if (num === 1) {
@@ -52,13 +62,9 @@ const contentToType=`Hi, we are <span class="highlight">Picture Plus</span>
 With our experience, we are ready to help your needs in the field of photography. We make
 <span class="italicOnly"> Commercial, Fashion, Portrait, Architecture, Food & Product Photography.</span>
 
-We began career as a photographer about 17 years ago.
-During we experiences working on magazines, tabloids, and agency.
-We have shot commercials, covers, editorials, and many renowned figures.
+We began career as a photographer about 17 years ago.<br>During we experiences working on magazines, tabloids, and agency.<br>We have shot commercials, covers, editorials, and many renowned figures.
 
-Photo or Retouching for:
-
-Traveloka, Realme, Sutra, Cosmopolitan, Harper’s Bazaar, Webull Indonesia, Trax Magazine, Casa Indonesia, ELLE Indonesia, Marie Claire Indonesia, iCreate Indonesia, Marketeer Indonesia, FHM Indonesia, Popular magazine etc.`.trim();
+Photo or Retouching for:<br>Traveloka, Realme, Sutra, Cosmopolitan, Harper’s Bazaar.<br>Webull Indonesia, Trax Magazine, Casa Indonesia, ELLE Indonesia, Marie Claire Indonesia.<br>iCreate Indonesia, Marketeer Indonesia, FHM Indonesia, Popular magazine etc.`.trim();
 
 function startTextWriter() {
   if (isTyping) return;
@@ -86,14 +92,18 @@ function startTextWriter() {
 }
 
 document.getElementById('page2').addEventListener('click', ()=>{
-  if(tap2.classList.contains('show')) tap2.style.animation='fade-out 0.5s ease forwards';
-  setTimeout(()=>{
-    goToPage(3);
-    updateNavActiveState('commercial');
-  },500);
+  if(!isTyping) {
+    tap2.style.animation='fade-out 0.5s ease forwards';
+    setTimeout(()=>{
+      goToPage(3);
+      updateNavActiveState('commercial');
+    },500);
+  }
 });
 
+let isAnimating = false;
 function moveActive(direction, activePage) {
+  if (isAnimating) return;
   const gridItems = activePage.querySelectorAll('.grid-item');
   let currentActive = activePage.querySelector('.grid-item.active');
   let nextActive = null;
@@ -114,13 +124,17 @@ function moveActive(direction, activePage) {
       currentActive.classList.remove('active');
     }
     nextActive.classList.add('active');
+    isAnimating = true;
     nextActive.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    setTimeout(() => {
+      isAnimating = false;
+    }, 500); // Match this to your smooth scroll duration
   }
 }
 
 window.addEventListener('keydown', (e) => {
   const activePage = document.querySelector('.page.active');
-  if (activePage && (activePage.id === 'page3' || activePage.id === 'page4' || activePage.id === 'page5' || activePage.id === 'page6')) { // Only scroll if gallery page is active
+  if (activePage && (activePage.id === 'commercial' || activePage.id === 'fashion' || activePage.id === 'portrait' || activePage.id === 'retouch')) { // Only scroll if gallery page is active
     if (e.key === 'ArrowLeft') {
       e.preventDefault(); // Prevent default browser action
       moveActive('left', activePage);
@@ -134,6 +148,7 @@ window.addEventListener('keydown', (e) => {
 
 // Function to initialize gallery for a given page element
 function initializeGallery(pageElement) {
+  const gridContainer = pageElement.querySelector('.grid-container');
   const gridItems = pageElement.querySelectorAll('.grid-item');
   const leftArrow = pageElement.querySelector('.left-arrow');
   const rightArrow = pageElement.querySelector('.right-arrow');
@@ -154,31 +169,29 @@ function initializeGallery(pageElement) {
     item.classList.add('active');
     item.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   });
+
+  // Add wheel listener for trackpad snap scrolling
+  if (gridContainer) {
+    let isWheeling = false;
+    gridContainer.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      if (isWheeling) return;
+
+      if (e.deltaX > 1) { // Swiped right
+        moveActive('right', pageElement);
+      } else if (e.deltaX < -1) { // Swiped left
+        moveActive('left', pageElement);
+      }
+
+      isWheeling = true;
+      setTimeout(() => {
+        isWheeling = false;
+      }, 300); // Throttle wheel event
+    });
+  }
 }
 
-// Initial setup for page3 (Commercial) when the page loads
-const page3Element = document.getElementById('page3');
-if (page3Element) {
-  initializeGallery(page3Element);
-}
 
-// Initial setup for page4 (Fashion) when the page loads
-const page4Element = document.getElementById('page4');
-if (page4Element) {
-  initializeGallery(page4Element);
-}
-
-// Initial setup for page5 (Portrait) when the page loads
-const page5Element = document.getElementById('page5');
-if (page5Element) {
-  initializeGallery(page5Element);
-}
-
-// Initial setup for page6 (Retouch) when the page loads
-const page6Element = document.getElementById('page6');
-if (page6Element) {
-  initializeGallery(page6Element);
-}
 
 // Add event listeners for header navigation links
 const navLinks = document.querySelectorAll('.navMenu ul li a');
@@ -213,10 +226,6 @@ if (navbarLogo) {
   });
 }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 221f215 (keep script.js from stash)
 // Burger menu toggle
 const burgerMenu = document.querySelector('.burger-menu');
 const navWrapper = document.querySelector('.navWrapper');
