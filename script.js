@@ -210,6 +210,11 @@ navLinks.forEach(link => {
       goToPage(pageNum);
       updateNavActiveState(targetId);
     }
+
+    // Close the burger menu if it's open
+    if (navWrapper.classList.contains('menu-open')) {
+      navWrapper.classList.remove('menu-open');
+    }
   });
 });
 
