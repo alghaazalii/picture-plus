@@ -49,12 +49,11 @@ document.getElementById('page1').addEventListener('click', ()=>{
 logoText.addEventListener('animationend', ()=>setTimeout(startTextWriter,500));
 const contentToType=`Hi, we are <span class="highlight">Picture Plus</span>
 
-With our experience, we are ready to help your needs in the field of photography. We make
-<span class="italicOnly"> Commercial, Fashion, Portrait, Architecture, Food & Product Photography.</span>
+With our experience, we are ready to help your needs in the field of photography. We make <span class="italicOnly">Commercial, Fashion, Portrait, Architecture, Food & Product Photography.</span>
 
-We began career as a photographer about 17 years ago.<br>During we experiences working on magazines, tabloids, and agency.<br>We have shot commercials, covers, editorials, and many renowned figures.
+We began career as a photographer about 17 years ago.<br>During we experienseworking on magazines, tabloids and agency.<br>We have shot commercials, covers, editorials, and many renowned figurer.
 
-Photo or Retouching for:<br>Traveloka, Realme, Sutra, Cosmopolitan, Harper's Bazaar.<br>Webull Indonesia, Trax Magazine, Casa Indonesia, ELLE Indonesia, Marie Claire Indonesia.<br>iCreate Indonesia, Marketeer Indonesia, FHM Indonesia, Popular magazine etc.`.trim();
+Photo or Retouching for :<br>Traveloka, Realme, Sutra, Cosmopolitan, Harper's Baazar,<br>Webull Indonesia, Trax Magazine, Casa Indonesia, ELLE Indonesia, Marie Claire Indonesia,<br>iCreate Indonesia, Marketeer Indonesia, FHM Indonesia, Popular magazine ect.`.trim();
 
 
 function startTextWriter() {
@@ -71,10 +70,62 @@ function startTextWriter() {
       }, 500);
       return;
     }
-    const p=document.createElement('p'); descElement.appendChild(p);
-    const text=paragraphs[pIndex]; let i=0;
+    const p=document.createElement('p'); 
+    p.style.opacity = '0';
+    descElement.appendChild(p);
+    setTimeout(() => p.style.opacity = '1', 50);
+    
+    const text=paragraphs[pIndex];
+    // Extract plain text for typing effect
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = text;
+    const plainText = tempDiv.textContent || tempDiv.innerText;
+    
+    let i=0;
+    let currentHTML = '';
+    let tagStack = [];
+    let inTag = false;
+    let currentTag = '';
+    
     function typeChar(){
-      if(i<text.length){p.innerHTML=text.slice(0,i+1).replace(/\n/g,''); i++; setTimeout(typeChar,15);}
+      if(i<text.length){
+        const char = text[i];
+        
+        // Handle HTML tags
+        if(char === '<'){
+          inTag = true;
+          currentTag = '<';
+        } else if(char === '>' && inTag){
+          currentTag += '>';
+          inTag = false;
+          currentHTML += currentTag;
+          
+          // Check if it's closing tag or opening tag
+          if(currentTag.startsWith('</')){
+            tagStack.pop();
+          } else if(!currentTag.includes('/>')){
+            tagStack.push(currentTag);
+          }
+          currentTag = '';
+        } else if(inTag){
+          currentTag += char;
+        } else {
+          // Regular character
+          currentHTML += char;
+        }
+        
+        // Close all open tags temporarily for smooth rendering
+        let displayHTML = currentHTML;
+        for(let j = tagStack.length - 1; j >= 0; j--){
+          const openTag = tagStack[j];
+          const tagName = openTag.match(/<(\w+)/)[1];
+          displayHTML += `</${tagName}>`;
+        }
+        
+        p.innerHTML = displayHTML.replace(/\n/g,'<br>');
+        i++; 
+        setTimeout(typeChar, 15);
+      }
       else{pIndex++; setTimeout(typeParagraph,300);}
     }
     typeChar();
@@ -216,6 +267,11 @@ navLinks.forEach(link => {
       goToPage(pageNum);
       updateNavActiveState(targetId);
     }
+
+    // Close the burger menu after a menu item is clicked
+    if (navWrapper.classList.contains('menu-open')) {
+      navWrapper.classList.remove('menu-open');
+    }
   });
 });
 
@@ -241,3 +297,15 @@ if (burgerMenu && navWrapper) {
     navWrapper.classList.toggle('menu-open');
   });
 }
+
+// Set a CSS custom property for the viewport height
+function setViewportHeight() {
+  let vh = window.innerHeight * 0.01;
+  document.documentElement.style.setProperty('--vh', `${vh}px`);
+}
+
+// Set the value on initial load
+setViewportHeight();
+
+// Recalculate on resize
+window.addEventListener('resize', setViewportHeight);
