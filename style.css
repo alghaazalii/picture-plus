@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400&display=swap');
 
 :root {
@@ -128,19 +129,77 @@ header.visible { opacity:1; visibility:visible; display:flex; }
   }
 
   .grid-container {
-    padding-left: 2vw;
-    padding-right: 2vw;
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
   }
-  .grid-item {
-    width: 90%;
-    max-width: 300px; /* To prevent it from becoming too large on wider mobile screens */
-    min-width: unset; /* Remove the previous min-width */
-    height: 40vh; /* Adjust height for mobile */
+  .grid-container::-webkit-scrollbar {
+    display: none !important;
   }
 
-  .grid-item.active {
-    height: 50vh; /* Adjust active height for mobile */
+  #page3 .grid-container,
+  #page4 .grid-container,
+  #page5 .grid-container,
+  #page6 .grid-container {
+    flex-direction: column !important;      /* vertical */
+    overflow-y: auto !important;            /* aktif scroll bawah-atas */
+    overflow-x: hidden !important;
+    height: 100vh;
+    padding-top: 12vh;
+    padding-bottom: 3vh;
+    padding-left: 5vw;
+    padding-right: 5vw;
+    gap: 2vh;                 /* jarak antar gambar lebih baik */
+    scroll-behavior: smooth;
+    scroll-snap-type: y proximity;
+    -ms-overflow-style: none !important;  /* IE and Edge */
+    scrollbar-width: none !important;  /* Firefox */
   }
+  #page3 .grid-container::-webkit-scrollbar,
+  #page4 .grid-container::-webkit-scrollbar,
+  #page5 .grid-container::-webkit-scrollbar,
+  #page6 .grid-container::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  #page3 .grid-item,
+  #page4 .grid-item,
+  #page5 .grid-item,
+  #page6 .grid-item {
+    width: 100%;
+    height: auto;
+    min-height: unset; /* Let height be natural */
+    box-shadow: none; /* Remove card effect */
+    scroll-margin-top: 12vh; /* Offset for fixed navbar */
+    scroll-snap-align: center;
+    
+    /* Inactive state */
+    transform: scale(0.9);
+    opacity: 0.5; /* Kontras lebih jelas */
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  #page3 .grid-item.active,
+  #page4 .grid-item.active,
+  #page5 .grid-item.active,
+  #page6 .grid-item.active {
+    /* Active state */
+    transform: scale(1);
+    opacity: 1;
+    filter: none;
+  }
+
+  #page3 .grid-item img,
+  #page4 .grid-item img,
+  #page5 .grid-item img,
+  #page6 .grid-item img {
+    object-fit: contain;
+    width: 100%;
+    height: auto; /* Fix aspect ratio */
+    border-radius: 10px;
+  }
+
+  .left-arrow i { transform: rotate(90deg) !important; }
+  .right-arrow i { transform: rotate(90deg) !important; }
 }
 
 /* Media Query for iPad/Tablet */

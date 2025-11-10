@@ -191,22 +191,43 @@ function initializeGallery(pageElement) {
   const rightArrow = pageElement.querySelector('.right-arrow');
   const gridContainer = pageElement.querySelector('.grid-container');
 
-  let canScroll = true;
-  gridContainer.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    const scrollThreshold = 10; // Adjust this value as needed
-    if (canScroll && Math.abs(e.deltaX) > scrollThreshold) {
-      if (e.deltaX > 0) {
-        moveActive('right', pageElement);
-      } else if (e.deltaX < 0) {
-        moveActive('left', pageElement);
+  // Desktop horizontal scroll
+  if (window.innerWidth > 768) {
+    let canScroll = true;
+    gridContainer.addEventListener('wheel', (e) => {
+      const scrollThreshold = 10;
+      if (canScroll && Math.abs(e.deltaX) > scrollThreshold) {
+        e.preventDefault();
+        if (e.deltaX > 0) {
+          moveActive('right', pageElement);
+        } else if (e.deltaX < 0) {
+          moveActive('left', pageElement);
+        }
+        canScroll = false;
+        setTimeout(() => { canScroll = true; }, 300);
       }
-      canScroll = false;
-      setTimeout(() => {
-        canScroll = true;
-      }, 500); // Adjust this value for desired responsiveness
-    }
-  });
+    });
+  } 
+  // Mobile vertical scroll with Intersection Observer
+  else {
+    const observerOptions = {
+      root: gridContainer,
+      rootMargin: '0px',
+      threshold: 0.6 // Adjust as needed for horizontal snapping
+    };
+
+    const observerCallback = (entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          gridItems.forEach(item => item.classList.remove('active'));
+          entry.target.classList.add('active');
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+    gridItems.forEach(item => observer.observe(item));
+  }
 
   // Ensure only one item is active initially
   gridItems.forEach((item, index) => {
