@@ -190,60 +190,72 @@ function initializeGallery(pageElement) {
   const leftArrow = pageElement.querySelector('.left-arrow');
   const rightArrow = pageElement.querySelector('.right-arrow');
   const gridContainer = pageElement.querySelector('.grid-container');
+  
+  let currentActiveItem = null;
+  const actualGridItems = Array.from(gridItems).filter(item => !item.classList.contains('scroll-spacer'));
 
-  // Desktop horizontal scroll
-  if (window.innerWidth > 768) {
-    let canScroll = true;
-    gridContainer.addEventListener('wheel', (e) => {
-      const scrollThreshold = 10;
-      if (canScroll && Math.abs(e.deltaX) > scrollThreshold) {
-        e.preventDefault();
-        if (e.deltaX > 0) {
-          moveActive('right', pageElement);
-        } else if (e.deltaX < 0) {
-          moveActive('left', pageElement);
-        }
-        canScroll = false;
-        setTimeout(() => { canScroll = true; }, 300);
+  // Helper function for smoother active class switching
+  function setActiveItem(newActiveItem) {
+    if (newActiveItem && newActiveItem !== currentActiveItem) {
+      if (currentActiveItem) {
+        currentActiveItem.classList.remove('active');
       }
-    });
-  } 
-  // Mobile vertical scroll with Intersection Observer
-  else {
-    const observerOptions = {
-      root: gridContainer,
-      rootMargin: '0px',
-      threshold: 0.6 // Adjust as needed for horizontal snapping
-    };
-
-    const observerCallback = (entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          gridItems.forEach(item => item.classList.remove('active'));
-          entry.target.classList.add('active');
-        }
-      });
-    };
-
-    const observer = new IntersectionObserver(observerCallback, observerOptions);
-    gridItems.forEach(item => observer.observe(item));
+      newActiveItem.classList.add('active');
+      currentActiveItem = newActiveItem;
+    }
   }
 
-  // Ensure only one item is active initially
-  gridItems.forEach((item, index) => {
-    if (index === 0) item.classList.add('active');
-    else item.classList.remove('active');
+  // Set initial active item and scroll to it
+  if (actualGridItems.length > 0) {
+    const firstItem = actualGridItems[0];
+    setActiveItem(firstItem);
+    // Instantly scroll to the beginning of the first real item on load
+    setTimeout(() => {
+      gridContainer.scrollTo({
+        left: firstItem.offsetLeft - parseInt(window.getComputedStyle(gridContainer).paddingLeft),
+        behavior: 'auto'
+      });
+    }, 100);
+  }
+
+  // Use a debounced scroll-end listener as the single source of truth for correctness.
+  let scrollEndTimer;
+  let isScrolling = false;
+  gridContainer.addEventListener('scroll', () => {
+    isScrolling = true;
+    clearTimeout(scrollEndTimer);
+    scrollEndTimer = setTimeout(() => {
+      const scrollCenter = gridContainer.scrollLeft + (gridContainer.offsetWidth / 2);
+      let closestItem = null;
+      let minDistance = Infinity;
+
+      actualGridItems.forEach(item => {
+        const itemCenter = item.offsetLeft + (item.offsetWidth / 2);
+        const distance = Math.abs(scrollCenter - itemCenter);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestItem = item;
+        }
+      });
+
+      if (closestItem) {
+        setActiveItem(closestItem);
+      }
+      
+      setTimeout(() => { isScrolling = false; }, 100);
+    }, 10); // Responsive 10ms delay
   });
 
-  // Attach event listeners for the current page's arrows
+  // Attach event listeners for arrows
   if (leftArrow) leftArrow.onclick = () => moveActive('left', pageElement);
   if (rightArrow) rightArrow.onclick = () => moveActive('right', pageElement);
 
   // Attach click listeners for grid items
-  gridItems.forEach(item => item.onclick = () => {
-    gridItems.forEach(i => i.classList.remove('active'));
-    item.classList.add('active');
-    item.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  gridItems.forEach(item => {
+    item.onclick = () => {
+      if (isScrolling || item.classList.contains('scroll-spacer')) return;
+      item.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+    };
   });
 }
 
