@@ -6,57 +6,129 @@ const tap2 = document.getElementById('tap2');
 const descElement = document.getElementById('desc');
 
 let isTyping = false;
+
+// ==========================================
+// LAZY LOADING IMAGES
+// ==========================================
+const lazyLoadConfig = {
+  rootMargin: '100px',
+  threshold: 0.01
+};
+
+const lazyImageObserver = new IntersectionObserver((entries, observer) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const img = entry.target;
+      const src = img.getAttribute('data-src');
+      
+      if (src) {
+        const tempImg = new Image();
+        tempImg.onload = () => {
+          img.src = src;
+          img.classList.remove('lazy');
+          img.classList.add('lazy-loaded');
+        };
+        tempImg.onerror = () => {
+          console.error('Failed to load image:', src);
+        };
+        tempImg.src = src;
+        observer.unobserve(img);
+      }
+    }
+  });
+}, lazyLoadConfig);
+
+function preloadActivePageImages(pageElement) {
+  if (!pageElement) return;
+  
+  const lazyImages = pageElement.querySelectorAll('img.lazy');
+  lazyImages.forEach((img, index) => {
+    if (index < 5) {
+      // Load first 5 images immediately
+      const src = img.getAttribute('data-src');
+      if (src) {
+        img.src = src;
+        img.classList.remove('lazy');
+        img.classList.add('lazy-loaded');
+      }
+    } else {
+      // Observe the rest
+      lazyImageObserver.observe(img);
+    }
+  });
+}
+
+// Preload images on initial load
+window.addEventListener('DOMContentLoaded', () => {
+  const activePage = document.querySelector('.page.active');
+  if (activePage) {
+    preloadActivePageImages(activePage);
+  }
+});
+
+// ==========================================
+// PAGE NAVIGATION
+// ==========================================
 function goToPage(num) {
   pages.forEach(p => p.classList.remove('active'));
   const newPage = pages[num - 1];
   newPage.classList.add('active');
 
+  // Preload images for the new page
+  setTimeout(() => {
+    preloadActivePageImages(newPage);
+  }, 100);
+
   if (num <= 2) {
     header.classList.remove('visible');
   } else {
     header.classList.add('visible');
-    // Reset gallery state for the newly activated page
-    setTimeout(() => { // Add a small delay
+    setTimeout(() => {
       const gridContainer = newPage.querySelector('.grid-container');
       const gridItems = newPage.querySelectorAll('.grid-item');
       
-      // Deactivate all items first
       gridItems.forEach(item => item.classList.remove('active'));
 
-      // Activate the first item if it exists
       if (gridItems.length > 0) {
-        const firstItem = gridItems[0]; // Simply take the first item
+        const firstItem = gridItems[0];
         if (firstItem) {
           firstItem.classList.add('active');
         }
       }
 
       // Scroll to the beginning with a slight delay
-      if (gridContainer) {
-        setTimeout(() => {
-          gridContainer.scrollTo({ left: 0, behavior: 'auto' });
-        }, 50); // Small delay to ensure other events settle
+      if (gridContainer && gridItems.length > 0) {
+        const firstItem = gridItems[0];
+        const handleFirstItemTransitionEnd = () => {
+          if (window.innerWidth <= 768) { // Mobile view
+            const scrollTop = firstItem.offsetTop - (window.innerHeight - firstItem.offsetHeight) / 2;
+            gridContainer.scrollTo({ top: scrollTop, behavior: 'auto' });
+          } else { // Desktop view
+            gridContainer.scrollTo({ left: 0, behavior: 'auto' });
+          }
+          firstItem.removeEventListener('transitionend', handleFirstItemTransitionEnd);
+        };
+        firstItem.addEventListener('transitionend', handleFirstItemTransitionEnd);
       }
       // Ensure body has focus for global keydown events
       document.body.focus();
     }, 100); // Delay for page rendering
   }
 
-  // Reset and restart animations for page1 and page2
   if (num === 1) {
     tap1.classList.remove('show');
-    tap1.style.animation = ''; // Clear any previous animation
+    tap1.style.animation = '';
     setTimeout(() => {
       tap1.classList.add('show');
-    }, 800); // Re-trigger animation with original delay
+    }, 800);
   } else if (num === 2) {
-    isTyping = false; // Reset typing flag
+    isTyping = false;
     logoText.classList.remove('tracking-in');
-    void logoText.offsetWidth; // Force reflow
+    void logoText.offsetWidth;
     descElement.innerHTML = '';
     tap2.classList.remove('show');
     tap2.style.animation = '';
-    setTimeout(() => logoText.classList.add('tracking-in'), 400); // Re-trigger logo animation
+    setTimeout(() => logoText.classList.add('tracking-in'), 400);
   }
 }
 
@@ -85,7 +157,6 @@ We began career as a photographer about 17 years ago.<br>During we experiensewor
 
 Photo or Retouching for :<br>Traveloka, Realme, Sutra, Cosmopolitan, Harper's Baazar,<br>Webull Indonesia, Trax Magazine, Casa Indonesia, ELLE Indonesia, Marie Claire Indonesia,<br>iCreate Indonesia, Marketeer Indonesia, FHM Indonesia, Popular magazine ect.`.trim();
 
-
 function startTextWriter() {
   if (isTyping) return;
   isTyping = true;
@@ -106,7 +177,6 @@ function startTextWriter() {
     setTimeout(() => p.style.opacity = '1', 50);
     
     const text=paragraphs[pIndex];
-    // Extract plain text for typing effect
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = text;
     const plainText = tempDiv.textContent || tempDiv.innerText;
@@ -121,7 +191,6 @@ function startTextWriter() {
       if(i<text.length){
         const char = text[i];
         
-        // Handle HTML tags
         if(char === '<'){
           inTag = true;
           currentTag = '<';
@@ -130,7 +199,6 @@ function startTextWriter() {
           inTag = false;
           currentHTML += currentTag;
           
-          // Check if it's closing tag or opening tag
           if(currentTag.startsWith('</')){
             tagStack.pop();
           } else if(!currentTag.includes('/>')){
@@ -140,11 +208,9 @@ function startTextWriter() {
         } else if(inTag){
           currentTag += char;
         } else {
-          // Regular character
           currentHTML += char;
         }
         
-        // Close all open tags temporarily for smooth rendering
         let displayHTML = currentHTML;
         for(let j = tagStack.length - 1; j >= 0; j--){
           const openTag = tagStack[j];
@@ -177,15 +243,15 @@ function moveActive(direction, activePage) {
   let nextActive = null;
 
   if (!currentActive) {
-    nextActive = gridItems[0]; // If no item is active, select the first one
+    nextActive = gridItems[0];
   } else {
     const currentIndex = Array.from(gridItems).indexOf(currentActive);
     if (direction === 'right') {
-      if (currentIndex < gridItems.length - 1) { // Ensure not to go beyond the last item
+      if (currentIndex < gridItems.length - 1) {
         nextActive = gridItems[currentIndex + 1];
       }
-    } else { // 'left'
-      if (currentIndex > 0) { // Ensure not to go before the first item
+    } else {
+      if (currentIndex > 0) {
         nextActive = gridItems[currentIndex - 1];
       }
     }
@@ -196,25 +262,53 @@ function moveActive(direction, activePage) {
       currentActive.classList.remove('active');
     }
     nextActive.classList.add('active');
-    nextActive.scrollIntoView({ behavior: 'auto', inline: 'center', block: 'nearest' });
+    
+    // Load adjacent images when moving
+    const nextIndex = Array.from(gridItems).indexOf(nextActive);
+    [nextIndex - 1, nextIndex, nextIndex + 1, nextIndex + 2].forEach(idx => {
+      if (idx >= 0 && idx < gridItems.length) {
+        const img = gridItems[idx].querySelector('img.lazy');
+        if (img) {
+          const src = img.getAttribute('data-src');
+          if (src) {
+            img.src = src;
+            img.classList.remove('lazy');
+            img.classList.add('lazy-loaded');
+          }
+        }
+      }
+    });
+    
+    const handleTransitionEnd = () => {
+      const gridContainer = activePage.querySelector('.grid-container');
+      if (gridContainer && nextActive) {
+        if (window.innerWidth <= 768) { // Mobile view
+          const scrollTop = item.offsetTop - (window.innerHeight - item.offsetHeight) / 2;
+          gridContainer.scrollTo({ top: scrollTop, behavior: 'auto' });        } else { // Desktop view
+          const scrollLeft = nextActive.offsetLeft - (gridContainer.offsetWidth - nextActive.offsetWidth) / 2;
+          gridContainer.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+        }
+      }
+      nextActive.removeEventListener('transitionend', handleTransitionEnd);
+    };
+    nextActive.addEventListener('transitionend', handleTransitionEnd);
   }
 }
 
 window.addEventListener('keydown', (e) => {
   const activePage = document.querySelector('.page.active');
-  if (activePage && (activePage.id === 'page3' || activePage.id === 'page4' || activePage.id === 'page5' || activePage.id === 'page6')) { // Only scroll if gallery page is active
+  if (activePage && (activePage.id === 'page3' || activePage.id === 'page4' || activePage.id === 'page5' || activePage.id === 'page6')) {
     if (e.key === 'ArrowLeft') {
-      e.preventDefault(); // Prevent default browser action
+      e.preventDefault();
       moveActive('left', activePage);
     }
     if (e.key === 'ArrowRight') {
-      e.preventDefault(); // Prevent default browser action
+      e.preventDefault();
       moveActive('right', activePage);
     }
   }
 });
 
-// Function to initialize gallery for a given page element
 function initializeGallery(pageElement) {
   const gridItems = pageElement.querySelectorAll('.grid-item');
   const leftArrow = pageElement.querySelector('.left-arrow');
@@ -224,7 +318,6 @@ function initializeGallery(pageElement) {
   let currentActiveItem = null;
   const actualGridItems = Array.from(gridItems).filter(item => !item.classList.contains('scroll-spacer'));
 
-  // Helper function for smoother active class switching
   function setActiveItem(newActiveItem) {
     if (newActiveItem && newActiveItem !== currentActiveItem) {
       if (currentActiveItem) {
@@ -232,18 +325,32 @@ function initializeGallery(pageElement) {
       }
       newActiveItem.classList.add('active');
       currentActiveItem = newActiveItem;
+      
+      // Load images around the active item
+      const activeIndex = actualGridItems.indexOf(newActiveItem);
+      [activeIndex - 1, activeIndex, activeIndex + 1, activeIndex + 2].forEach(idx => {
+        if (idx >= 0 && idx < actualGridItems.length) {
+          const img = actualGridItems[idx].querySelector('img.lazy');
+          if (img) {
+            const src = img.getAttribute('data-src');
+            if (src) {
+              img.src = src;
+              img.classList.remove('lazy');
+              img.classList.add('lazy-loaded');
+            }
+          }
+        }
+      });
     }
   }
 
-  // Use a debounced scroll-end listener as the single source of truth for correctness.
   let scrollEndTimer;
   let isScrolling = false;
   gridContainer.addEventListener('scroll', () => {
     isScrolling = true;
     clearTimeout(scrollEndTimer);
     scrollEndTimer = setTimeout(() => {
-      // Special case for the end of the scroll
-      if (gridContainer.scrollLeft + gridContainer.clientWidth >= gridContainer.scrollWidth - 5) { // 5px tolerance
+      if (gridContainer.scrollLeft + gridContainer.clientWidth >= gridContainer.scrollWidth - 5) {
         const lastItem = actualGridItems[actualGridItems.length - 1];
         if (lastItem) {
           setActiveItem(lastItem);
@@ -268,85 +375,87 @@ function initializeGallery(pageElement) {
       }
       
       setTimeout(() => { isScrolling = false; }, 100);
-    }, 10); // Responsive 10ms delay
+    }, 10);
   });
 
-  // Attach event listeners for arrows
   if (leftArrow) leftArrow.onclick = () => moveActive('left', pageElement);
   if (rightArrow) rightArrow.onclick = () => moveActive('right', pageElement);
 
-  // Attach click listeners for grid items
   gridItems.forEach(item => {
     item.onclick = () => {
       if (isScrolling || item.classList.contains('scroll-spacer')) return;
-      item.scrollIntoView({ behavior: 'auto', inline: 'center' });
+    const handleTransitionEnd = () => {
+      const gridContainer = item.closest('.grid-container'); // Get the parent grid-container
+      if (gridContainer && item) {
+        if (window.innerWidth <= 768) { // Mobile view
+          const scrollTop = nextActive.offsetTop - (window.innerHeight - nextActive.offsetHeight) / 2;
+          gridContainer.scrollTo({ top: scrollTop, behavior: 'auto' });
+        } else { // Desktop view
+          const scrollLeft = item.offsetLeft - (gridContainer.offsetWidth - item.offsetWidth) / 2;
+          gridContainer.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+        }
+      }
+      item.removeEventListener('transitionend', handleTransitionEnd);
+    };
+    item.addEventListener('transitionend', handleTransitionEnd);
     };
   });
 }
 
-// Initial setup for page3 (Commercial) when the page loads
 const page3Element = document.getElementById('page3');
 if (page3Element) {
   initializeGallery(page3Element);
 }
 
-// Initial setup for page4 (Fashion) when the page loads
 const page4Element = document.getElementById('page4');
 if (page4Element) {
   initializeGallery(page4Element);
 }
 
-// Initial setup for page5 (Portrait) when the page loads
 const page5Element = document.getElementById('page5');
 if (page5Element) {
   initializeGallery(page5Element);
 }
 
-// Initial setup for page6 (Retouch) when the page loads
 const page6Element = document.getElementById('page6');
 if (page6Element) {
   initializeGallery(page6Element);
 }
 
-// Add event listeners for header navigation links
 const navLinks = document.querySelectorAll('.navMenu ul li a');
 navLinks.forEach(link => {
   link.addEventListener('click', (e) => {
     e.preventDefault();
-    const targetId = link.getAttribute('href').substring(1); // e.g., 'commercial' or 'fashion'
+    const targetId = link.getAttribute('href').substring(1);
     let pageNum;
     if (targetId === 'commercial') pageNum = 3;
     else if (targetId === 'fashion') pageNum = 4;
     else if (targetId === 'portrait') pageNum = 5;
     else if (targetId === 'retouch') pageNum = 6;
-    else if (targetId === 'about') pageNum = 2; // About goes to page 2
+    else if (targetId === 'about') pageNum = 2;
 
     if (pageNum) {
       goToPage(pageNum);
       updateNavActiveState(targetId);
     }
 
-    // Close the burger menu after a menu item is clicked
     if (navWrapper.classList.contains('menu-open')) {
       navWrapper.classList.remove('menu-open');
     }
   });
 });
 
-// Add event listener for navbar logo
 const navbarLogo = document.getElementById('navbarLogo');
 if (navbarLogo) {
   navbarLogo.addEventListener('click', () => {
     const currentPage = document.querySelector('.page.active');
     if (currentPage) {
-      // No need to wait for animationend, just start animation and transition
     }
     goToPage(1);
-    updateNavActiveState(''); // Clear active state for nav links
+    updateNavActiveState('');
   });
 }
 
-// Burger menu toggle
 const burgerMenu = document.querySelector('.burger-menu');
 const navWrapper = document.querySelector('.navWrapper');
 
@@ -356,14 +465,36 @@ if (burgerMenu && navWrapper) {
   });
 }
 
-// Set a CSS custom property for the viewport height
 function setViewportHeight() {
   let vh = window.innerHeight * 0.01;
   document.documentElement.style.setProperty('--vh', `${vh}px`);
 }
 
-// Set the value on initial load
 setViewportHeight();
-
-// Recalculate on resize
 window.addEventListener('resize', setViewportHeight);
+
+// Add lazy loading styles
+const lazyLoadStyles = document.createElement('style');
+lazyLoadStyles.textContent = `
+  img.lazy {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    min-height: 200px;
+  }
+  
+  @keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  
+  img.lazy-loaded {
+    animation: fadeIn 0.3s ease-in;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+`;
+document.head.appendChild(lazyLoadStyles);
