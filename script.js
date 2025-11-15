@@ -8,9 +8,39 @@ const descElement = document.getElementById('desc');
 let isTyping = false;
 function goToPage(num) {
   pages.forEach(p => p.classList.remove('active'));
-  pages[num - 1].classList.add('active');
-  if(num<=2) header.classList.remove('visible');
-  else header.classList.add('visible');
+  const newPage = pages[num - 1];
+  newPage.classList.add('active');
+
+  if (num <= 2) {
+    header.classList.remove('visible');
+  } else {
+    header.classList.add('visible');
+    // Reset gallery state for the newly activated page
+    setTimeout(() => { // Add a small delay
+      const gridContainer = newPage.querySelector('.grid-container');
+      const gridItems = newPage.querySelectorAll('.grid-item');
+      
+      // Deactivate all items first
+      gridItems.forEach(item => item.classList.remove('active'));
+
+      // Activate the first item if it exists
+      if (gridItems.length > 0) {
+        const firstItem = gridItems[0]; // Simply take the first item
+        if (firstItem) {
+          firstItem.classList.add('active');
+        }
+      }
+
+      // Scroll to the beginning with a slight delay
+      if (gridContainer) {
+        setTimeout(() => {
+          gridContainer.scrollTo({ left: 0, behavior: 'auto' });
+        }, 50); // Small delay to ensure other events settle
+      }
+      // Ensure body has focus for global keydown events
+      document.body.focus();
+    }, 100); // Delay for page rendering
+  }
 
   // Reset and restart animations for page1 and page2
   if (num === 1) {
@@ -166,7 +196,7 @@ function moveActive(direction, activePage) {
       currentActive.classList.remove('active');
     }
     nextActive.classList.add('active');
-    nextActive.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    nextActive.scrollIntoView({ behavior: 'auto', inline: 'center', block: 'nearest' });
   }
 }
 
@@ -205,19 +235,6 @@ function initializeGallery(pageElement) {
     }
   }
 
-  // Set initial active item and scroll to it
-  if (actualGridItems.length > 0) {
-    const firstItem = actualGridItems[0];
-    setActiveItem(firstItem);
-    // Instantly scroll to the beginning of the first real item on load
-    setTimeout(() => {
-      gridContainer.scrollTo({
-        left: firstItem.offsetLeft - parseInt(window.getComputedStyle(gridContainer).paddingLeft),
-        behavior: 'auto'
-      });
-    }, 100);
-  }
-
   // Use a debounced scroll-end listener as the single source of truth for correctness.
   let scrollEndTimer;
   let isScrolling = false;
@@ -225,21 +242,29 @@ function initializeGallery(pageElement) {
     isScrolling = true;
     clearTimeout(scrollEndTimer);
     scrollEndTimer = setTimeout(() => {
-      const scrollCenter = gridContainer.scrollLeft + (gridContainer.offsetWidth / 2);
-      let closestItem = null;
-      let minDistance = Infinity;
-
-      actualGridItems.forEach(item => {
-        const itemCenter = item.offsetLeft + (item.offsetWidth / 2);
-        const distance = Math.abs(scrollCenter - itemCenter);
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestItem = item;
+      // Special case for the end of the scroll
+      if (gridContainer.scrollLeft + gridContainer.clientWidth >= gridContainer.scrollWidth - 5) { // 5px tolerance
+        const lastItem = actualGridItems[actualGridItems.length - 1];
+        if (lastItem) {
+          setActiveItem(lastItem);
         }
-      });
+      } else {
+        const scrollCenter = gridContainer.scrollLeft + (gridContainer.offsetWidth / 2);
+        let closestItem = null;
+        let minDistance = Infinity;
 
-      if (closestItem) {
-        setActiveItem(closestItem);
+        actualGridItems.forEach(item => {
+          const itemCenter = item.offsetLeft + (item.offsetWidth / 2);
+          const distance = Math.abs(scrollCenter - itemCenter);
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestItem = item;
+          }
+        });
+
+        if (closestItem) {
+          setActiveItem(closestItem);
+        }
       }
       
       setTimeout(() => { isScrolling = false; }, 100);
@@ -254,7 +279,7 @@ function initializeGallery(pageElement) {
   gridItems.forEach(item => {
     item.onclick = () => {
       if (isScrolling || item.classList.contains('scroll-spacer')) return;
-      item.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+      item.scrollIntoView({ behavior: 'auto', inline: 'center' });
     };
   });
 }
