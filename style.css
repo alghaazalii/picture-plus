@@ -141,9 +141,7 @@ header.visible { opacity:1; visibility:visible; display:flex; }
   #page5 .grid-container,
   #page6 .grid-container {
     flex-direction: column !important;      /* vertical */
-    overflow-y: auto !important;            /* aktif scroll bawah-atas */
     overflow-x: hidden !important;
-    height: 100vh;
     padding-top: 12vh;
     padding-bottom: 3vh;
     padding-left: 5vw;
@@ -223,10 +221,10 @@ header.visible { opacity:1; visibility:visible; display:flex; }
   display:flex; 
   flex-direction:row; 
   overflow-x:auto; 
-  gap:0; 
+  gap:0.5rem; 
   width:100%; 
   padding-left: 2rem; 
-  padding-right: 2rem;
+  padding-right: 1rem;
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
@@ -241,7 +239,7 @@ header.visible { opacity:1; visibility:visible; display:flex; }
   transition: opacity 0.4s ease, filter 0.4s ease, transform 0.4s ease;
   filter: blur(2px); 
   opacity: 0.8; 
-  transform: scale(0.95);
+  transform: scale(0.9);
   scroll-snap-align: center;
 }
 

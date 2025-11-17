@@ -101,8 +101,7 @@ function goToPage(num) {
         const firstItem = gridItems[0];
         const handleFirstItemTransitionEnd = () => {
           if (window.innerWidth <= 768) { // Mobile view
-            const scrollTop = firstItem.offsetTop - (window.innerHeight - firstItem.offsetHeight) / 2;
-            gridContainer.scrollTo({ top: scrollTop, behavior: 'auto' });
+            firstItem.scrollIntoView({ behavior: 'auto', block: 'center' });
           } else { // Desktop view
             gridContainer.scrollTo({ left: 0, behavior: 'auto' });
           }
@@ -283,8 +282,8 @@ function moveActive(direction, activePage) {
       const gridContainer = activePage.querySelector('.grid-container');
       if (gridContainer && nextActive) {
         if (window.innerWidth <= 768) { // Mobile view
-          const scrollTop = item.offsetTop - (window.innerHeight - item.offsetHeight) / 2;
-          gridContainer.scrollTo({ top: scrollTop, behavior: 'auto' });        } else { // Desktop view
+          nextActive.scrollIntoView({ behavior: 'auto', block: 'center' });
+        } else { // Desktop view
           const scrollLeft = nextActive.offsetLeft - (gridContainer.offsetWidth - nextActive.offsetWidth) / 2;
           gridContainer.scrollTo({ left: scrollLeft, behavior: 'smooth' });
         }
