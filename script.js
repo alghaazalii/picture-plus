@@ -96,22 +96,19 @@ function goToPage(num) {
         }
       }
 
-      // Scroll to the beginning with a slight delay
+      // Scroll to the beginning
       if (gridContainer && gridItems.length > 0) {
-        const firstItem = gridItems[0];
-        const handleFirstItemTransitionEnd = () => {
-          if (window.innerWidth <= 768) { // Mobile view
-            firstItem.scrollIntoView({ behavior: 'auto', block: 'center' });
-          } else { // Desktop view
-            gridContainer.scrollTo({ left: 0, behavior: 'auto' });
-          }
-          firstItem.removeEventListener('transitionend', handleFirstItemTransitionEnd);
-        };
-        firstItem.addEventListener('transitionend', handleFirstItemTransitionEnd);
+        if (window.innerWidth <= 768) { // Mobile view
+          const firstItem = gridItems[0];
+          firstItem.scrollIntoView({ behavior: 'auto', block: 'center' });
+        } else { // Desktop view
+          gridContainer.scrollTo({ left: 0, behavior: 'auto' });
+        }
       }
+      
       // Ensure body has focus for global keydown events
       document.body.focus();
-    }, 100); // Delay for page rendering
+    }, 100);
   }
 
   if (num === 1) {
@@ -238,20 +235,23 @@ document.getElementById('page2').addEventListener('click', ()=>{
 
 function moveActive(direction, activePage) {
   const gridItems = activePage.querySelectorAll('.grid-item');
+  const actualGridItems = Array.from(gridItems).filter(item => !item.classList.contains('scroll-spacer'));
   let currentActive = activePage.querySelector('.grid-item.active');
   let nextActive = null;
+  
+  const isDesktop = window.innerWidth > 768;
 
   if (!currentActive) {
-    nextActive = gridItems[0];
+    nextActive = actualGridItems[0];
   } else {
-    const currentIndex = Array.from(gridItems).indexOf(currentActive);
+    const currentIndex = actualGridItems.indexOf(currentActive);
     if (direction === 'right') {
-      if (currentIndex < gridItems.length - 1) {
-        nextActive = gridItems[currentIndex + 1];
+      if (currentIndex < actualGridItems.length - 1) {
+        nextActive = actualGridItems[currentIndex + 1];
       }
     } else {
       if (currentIndex > 0) {
-        nextActive = gridItems[currentIndex - 1];
+        nextActive = actualGridItems[currentIndex - 1];
       }
     }
   }
@@ -263,10 +263,10 @@ function moveActive(direction, activePage) {
     nextActive.classList.add('active');
     
     // Load adjacent images when moving
-    const nextIndex = Array.from(gridItems).indexOf(nextActive);
-    [nextIndex - 1, nextIndex, nextIndex + 1, nextIndex + 2].forEach(idx => {
-      if (idx >= 0 && idx < gridItems.length) {
-        const img = gridItems[idx].querySelector('img.lazy');
+    const nextIndex = actualGridItems.indexOf(nextActive);
+    [nextIndex - 2, nextIndex - 1, nextIndex, nextIndex + 1, nextIndex + 2].forEach(idx => {
+      if (idx >= 0 && idx < actualGridItems.length) {
+        const img = actualGridItems[idx].querySelector('img.lazy');
         if (img) {
           const src = img.getAttribute('data-src');
           if (src) {
@@ -278,19 +278,34 @@ function moveActive(direction, activePage) {
       }
     });
     
-    const handleTransitionEnd = () => {
-      const gridContainer = activePage.querySelector('.grid-container');
-      if (gridContainer && nextActive) {
-        if (window.innerWidth <= 768) { // Mobile view
-          nextActive.scrollIntoView({ behavior: 'auto', block: 'center' });
-        } else { // Desktop view
+    const gridContainer = activePage.querySelector('.grid-container');
+    if (gridContainer && nextActive) {
+      const itemIndex = actualGridItems.indexOf(nextActive);
+      
+      // Desktop-specific behavior
+      if (isDesktop) {
+        // Handle first item
+        if (itemIndex === 0) {
+          gridContainer.scrollTo({ left: 0, behavior: 'smooth' });
+        }
+        // Handle last item
+        else if (itemIndex === actualGridItems.length - 1) {
+          gridContainer.scrollTo({ 
+            left: gridContainer.scrollWidth - gridContainer.offsetWidth, 
+            behavior: 'smooth' 
+          });
+        }
+        // Handle middle items
+        else {
           const scrollLeft = nextActive.offsetLeft - (gridContainer.offsetWidth - nextActive.offsetWidth) / 2;
           gridContainer.scrollTo({ left: scrollLeft, behavior: 'smooth' });
         }
+      } else {
+        // Mobile/Tablet - Original behavior
+        const scrollLeft = nextActive.offsetLeft - (gridContainer.offsetWidth - nextActive.offsetWidth) / 2;
+        gridContainer.scrollTo({ left: scrollLeft, behavior: 'smooth' });
       }
-      nextActive.removeEventListener('transitionend', handleTransitionEnd);
-    };
-    nextActive.addEventListener('transitionend', handleTransitionEnd);
+    }
   }
 }
 
@@ -316,9 +331,13 @@ function initializeGallery(pageElement) {
   
   let currentActiveItem = null;
   const actualGridItems = Array.from(gridItems).filter(item => !item.classList.contains('scroll-spacer'));
+  
+  const isDesktop = () => window.innerWidth > 768;
 
-  function setActiveItem(newActiveItem) {
-    if (newActiveItem && newActiveItem !== currentActiveItem) {
+  function setActiveItem(newActiveItem, forceScroll = false) {
+    if (!newActiveItem) return;
+    
+    if (newActiveItem !== currentActiveItem || forceScroll) {
       if (currentActiveItem) {
         currentActiveItem.classList.remove('active');
       }
@@ -327,7 +346,7 @@ function initializeGallery(pageElement) {
       
       // Load images around the active item
       const activeIndex = actualGridItems.indexOf(newActiveItem);
-      [activeIndex - 1, activeIndex, activeIndex + 1, activeIndex + 2].forEach(idx => {
+      [activeIndex - 2, activeIndex - 1, activeIndex, activeIndex + 1, activeIndex + 2].forEach(idx => {
         if (idx >= 0 && idx < actualGridItems.length) {
           const img = actualGridItems[idx].querySelector('img.lazy');
           if (img) {
@@ -345,60 +364,145 @@ function initializeGallery(pageElement) {
 
   let scrollEndTimer;
   let isScrolling = false;
+  let isManualScrolling = false;
+  
   gridContainer.addEventListener('scroll', () => {
+    if (isManualScrolling) return;
+    
     isScrolling = true;
     clearTimeout(scrollEndTimer);
+    
     scrollEndTimer = setTimeout(() => {
-      if (gridContainer.scrollLeft + gridContainer.clientWidth >= gridContainer.scrollWidth - 5) {
-        const lastItem = actualGridItems[actualGridItems.length - 1];
-        if (lastItem) {
-          setActiveItem(lastItem);
+      // Desktop-specific scroll detection
+      if (isDesktop()) {
+        const scrollCenter = gridContainer.scrollLeft + (gridContainer.offsetWidth / 2);
+        const containerWidth = gridContainer.offsetWidth;
+        const scrollLeft = gridContainer.scrollLeft;
+        const scrollWidth = gridContainer.scrollWidth;
+        
+        // Check if at the end
+        if (scrollLeft + containerWidth >= scrollWidth - 5) {
+          const lastItem = actualGridItems[actualGridItems.length - 1];
+          if (lastItem) {
+            setActiveItem(lastItem);
+          }
+        } 
+        // Check if at the beginning
+        else if (scrollLeft <= 5) {
+          const firstItem = actualGridItems[0];
+          if (firstItem) {
+            setActiveItem(firstItem);
+          }
+        }
+        // Normal center detection
+        else {
+          let closestItem = null;
+          let minDistance = Infinity;
+
+          actualGridItems.forEach(item => {
+            const itemCenter = item.offsetLeft + (item.offsetWidth / 2);
+            const distance = Math.abs(scrollCenter - itemCenter);
+            if (distance < minDistance) {
+              minDistance = distance;
+              closestItem = item;
+            }
+          });
+
+          if (closestItem) {
+            setActiveItem(closestItem);
+          }
         }
       } else {
-        const scrollCenter = gridContainer.scrollLeft + (gridContainer.offsetWidth / 2);
-        let closestItem = null;
-        let minDistance = Infinity;
-
-        actualGridItems.forEach(item => {
-          const itemCenter = item.offsetLeft + (item.offsetWidth / 2);
-          const distance = Math.abs(scrollCenter - itemCenter);
-          if (distance < minDistance) {
-            minDistance = distance;
-            closestItem = item;
+        // Mobile/Tablet - Original behavior
+        if (gridContainer.scrollLeft + gridContainer.clientWidth >= gridContainer.scrollWidth - 5) {
+          const lastItem = actualGridItems[actualGridItems.length - 1];
+          if (lastItem) {
+            setActiveItem(lastItem);
           }
-        });
+        } else {
+          const scrollCenter = gridContainer.scrollLeft + (gridContainer.offsetWidth / 2);
+          let closestItem = null;
+          let minDistance = Infinity;
 
-        if (closestItem) {
-          setActiveItem(closestItem);
+          actualGridItems.forEach(item => {
+            const itemCenter = item.offsetLeft + (item.offsetWidth / 2);
+            const distance = Math.abs(scrollCenter - itemCenter);
+            if (distance < minDistance) {
+              minDistance = distance;
+              closestItem = item;
+            }
+          });
+
+          if (closestItem) {
+            setActiveItem(closestItem);
+          }
         }
       }
       
-      setTimeout(() => { isScrolling = false; }, 100);
+      isScrolling = false;
     }, 10);
   });
 
-  if (leftArrow) leftArrow.onclick = () => moveActive('left', pageElement);
-  if (rightArrow) rightArrow.onclick = () => moveActive('right', pageElement);
+  if (leftArrow) {
+    leftArrow.onclick = () => {
+      isManualScrolling = true;
+      moveActive('left', pageElement);
+      setTimeout(() => { isManualScrolling = false; }, 100);
+    };
+  }
+  
+  if (rightArrow) {
+    rightArrow.onclick = () => {
+      isManualScrolling = true;
+      moveActive('right', pageElement);
+      setTimeout(() => { isManualScrolling = false; }, 100);
+    };
+  }
 
-  gridItems.forEach(item => {
+  gridItems.forEach((item, index) => {
     item.onclick = () => {
-      if (isScrolling || item.classList.contains('scroll-spacer')) return;
-    const handleTransitionEnd = () => {
-      const gridContainer = item.closest('.grid-container'); // Get the parent grid-container
+      if (item.classList.contains('scroll-spacer')) return;
+      
+      isManualScrolling = true;
+      setActiveItem(item, true);
+      
+      const gridContainer = item.closest('.grid-container');
       if (gridContainer && item) {
-        if (window.innerWidth <= 768) { // Mobile view
-          const scrollTop = nextActive.offsetTop - (window.innerHeight - nextActive.offsetHeight) / 2;
-          gridContainer.scrollTo({ top: scrollTop, behavior: 'auto' });
-        } else { // Desktop view
+        const itemIndex = actualGridItems.indexOf(item);
+        
+        // Desktop-specific scroll behavior
+        if (isDesktop()) {
+          // Handle first item
+          if (itemIndex === 0) {
+            gridContainer.scrollTo({ left: 0, behavior: 'smooth' });
+          }
+          // Handle last item
+          else if (itemIndex === actualGridItems.length - 1) {
+            gridContainer.scrollTo({ 
+              left: gridContainer.scrollWidth - gridContainer.offsetWidth, 
+              behavior: 'smooth' 
+            });
+          }
+          // Handle middle items
+          else {
+            const scrollLeft = item.offsetLeft - (gridContainer.offsetWidth - item.offsetWidth) / 2;
+            gridContainer.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+          }
+        } else {
+          // Mobile/Tablet - Original behavior
           const scrollLeft = item.offsetLeft - (gridContainer.offsetWidth - item.offsetWidth) / 2;
           gridContainer.scrollTo({ left: scrollLeft, behavior: 'smooth' });
         }
       }
-      item.removeEventListener('transitionend', handleTransitionEnd);
-    };
-    item.addEventListener('transitionend', handleTransitionEnd);
+      
+      setTimeout(() => { isManualScrolling = false; }, 100);
     };
   });
+  
+  // Set first item as active on initialization
+  if (actualGridItems.length > 0) {
+    setActiveItem(actualGridItems[0], false);
+  }
 }
 
 const page3Element = document.getElementById('page3');
@@ -447,9 +551,6 @@ navLinks.forEach(link => {
 const navbarLogo = document.getElementById('navbarLogo');
 if (navbarLogo) {
   navbarLogo.addEventListener('click', () => {
-    const currentPage = document.querySelector('.page.active');
-    if (currentPage) {
-    }
     goToPage(1);
     updateNavActiveState('');
   });
