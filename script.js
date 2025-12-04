@@ -6,6 +6,7 @@ const tap2 = document.getElementById('tap2');
 const descElement = document.getElementById('desc');
 
 let isTyping = false;
+let hasTypedOnce = false; // Flag untuk mencegah typing ulang
 
 // ==========================================
 // LAZY LOADING IMAGES
@@ -44,7 +45,6 @@ function preloadActivePageImages(pageElement) {
   const lazyImages = pageElement.querySelectorAll('img.lazy');
   lazyImages.forEach((img, index) => {
     if (index < 5) {
-      // Load first 5 images immediately
       const src = img.getAttribute('data-src');
       if (src) {
         img.src = src;
@@ -52,13 +52,11 @@ function preloadActivePageImages(pageElement) {
         img.classList.add('lazy-loaded');
       }
     } else {
-      // Observe the rest
       lazyImageObserver.observe(img);
     }
   });
 }
 
-// Preload images on initial load
 window.addEventListener('DOMContentLoaded', () => {
   const activePage = document.querySelector('.page.active');
   if (activePage) {
@@ -70,11 +68,24 @@ window.addEventListener('DOMContentLoaded', () => {
 // PAGE NAVIGATION
 // ==========================================
 function goToPage(num) {
-  pages.forEach(p => p.classList.remove('active'));
+  pages.forEach(p => {
+    p.classList.remove('active');
+    // PERBAIKAN: Sembunyikan page sepenuhnya di mobile
+    if (window.innerWidth <= 768) {
+      p.style.display = 'none';
+      p.style.visibility = 'hidden';
+    }
+  });
+  
   const newPage = pages[num - 1];
   newPage.classList.add('active');
+  
+  // PERBAIKAN: Tampilkan page yang aktif
+  if (window.innerWidth <= 768) {
+    newPage.style.display = 'flex';
+    newPage.style.visibility = 'visible';
+  }
 
-  // Preload images for the new page
   setTimeout(() => {
     preloadActivePageImages(newPage);
   }, 100);
@@ -96,17 +107,15 @@ function goToPage(num) {
         }
       }
 
-      // Scroll to the beginning
       if (gridContainer && gridItems.length > 0) {
-        if (window.innerWidth <= 768) { // Mobile view
+        if (window.innerWidth <= 768) {
           const firstItem = gridItems[0];
           firstItem.scrollIntoView({ behavior: 'auto', block: 'center' });
-        } else { // Desktop view
+        } else {
           gridContainer.scrollTo({ left: 0, behavior: 'auto' });
         }
       }
       
-      // Ensure body has focus for global keydown events
       document.body.focus();
     }, 100);
   }
@@ -118,10 +127,12 @@ function goToPage(num) {
       tap1.classList.add('show');
     }, 800);
   } else if (num === 2) {
+    // PERBAIKAN: Reset state untuk Page 2
     isTyping = false;
+    hasTypedOnce = false; // Reset flag agar bisa typing lagi
     logoText.classList.remove('tracking-in');
     void logoText.offsetWidth;
-    descElement.innerHTML = '';
+    descElement.innerHTML = ''; // Clear text
     tap2.classList.remove('show');
     tap2.style.animation = '';
     setTimeout(() => logoText.classList.add('tracking-in'), 400);
@@ -139,12 +150,17 @@ function updateNavActiveState(pageId) {
 }
 
 window.onload = () => setTimeout(()=>tap1.classList.add('show'),800);
+
 document.getElementById('page1').addEventListener('click', ()=>{
   tap1.style.animation='fade-out 0.5s ease forwards';
   setTimeout(()=>goToPage(2),400);
 });
 
-logoText.addEventListener('animationend', ()=>setTimeout(startTextWriter,500));
+logoText.addEventListener('animationend', ()=>{
+  // PERBAIKAN: Selalu trigger typing saat animation selesai
+  setTimeout(startTextWriter, 500);
+});
+
 const contentToType=`Hi, we are <span class="highlight">Picture Plus</span>
 
 With our experience, we are ready to help your needs in the field of photography. We make <span class="italicOnly">Commercial, Fashion, Portrait, Architecture, Food & Product Photography.</span>
@@ -154,19 +170,26 @@ We began career as a photographer about 17 years ago.<br>During we experiensewor
 Photo or Retouching for :<br>Traveloka, Realme, Sutra, Cosmopolitan, Harper's Baazar,<br>Webull Indonesia, Trax Magazine, Casa Indonesia, ELLE Indonesia, Marie Claire Indonesia,<br>iCreate Indonesia, Marketeer Indonesia, FHM Indonesia, Popular magazine ect.`.trim();
 
 function startTextWriter() {
+  // PERBAIKAN: Cegah typing ulang jika sedang typing, tapi izinkan jika sudah di-reset
   if (isTyping) return;
+  
   isTyping = true;
   descElement.style.opacity=1;
   descElement.innerHTML='';
-  const paragraphs=contentToType.split('\n\n'); let pIndex=0;
+  
+  const paragraphs=contentToType.split('\n\n'); 
+  let pIndex=0;
+  
   function typeParagraph(){
     if(pIndex>=paragraphs.length){
       setTimeout(()=> {
         tap2.classList.add('show');
         isTyping = false;
+        hasTypedOnce = true; // Set flag setelah selesai typing
       }, 500);
       return;
     }
+    
     const p=document.createElement('p'); 
     p.style.opacity = '0';
     descElement.appendChild(p);
@@ -262,7 +285,6 @@ function moveActive(direction, activePage) {
     }
     nextActive.classList.add('active');
     
-    // Load adjacent images when moving
     const nextIndex = actualGridItems.indexOf(nextActive);
     [nextIndex - 2, nextIndex - 1, nextIndex, nextIndex + 1, nextIndex + 2].forEach(idx => {
       if (idx >= 0 && idx < actualGridItems.length) {
@@ -282,26 +304,21 @@ function moveActive(direction, activePage) {
     if (gridContainer && nextActive) {
       const itemIndex = actualGridItems.indexOf(nextActive);
       
-      // Desktop-specific behavior
       if (isDesktop) {
-        // Handle first item
         if (itemIndex === 0) {
           gridContainer.scrollTo({ left: 0, behavior: 'smooth' });
         }
-        // Handle last item
         else if (itemIndex === actualGridItems.length - 1) {
           gridContainer.scrollTo({ 
             left: gridContainer.scrollWidth - gridContainer.offsetWidth, 
             behavior: 'smooth' 
           });
         }
-        // Handle middle items
         else {
           const scrollLeft = nextActive.offsetLeft - (gridContainer.offsetWidth - nextActive.offsetWidth) / 2;
           gridContainer.scrollTo({ left: scrollLeft, behavior: 'smooth' });
         }
       } else {
-        // Mobile/Tablet - Original behavior
         const scrollLeft = nextActive.offsetLeft - (gridContainer.offsetWidth - nextActive.offsetWidth) / 2;
         gridContainer.scrollTo({ left: scrollLeft, behavior: 'smooth' });
       }
@@ -344,7 +361,6 @@ function initializeGallery(pageElement) {
       newActiveItem.classList.add('active');
       currentActiveItem = newActiveItem;
       
-      // Load images around the active item
       const activeIndex = actualGridItems.indexOf(newActiveItem);
       [activeIndex - 2, activeIndex - 1, activeIndex, activeIndex + 1, activeIndex + 2].forEach(idx => {
         if (idx >= 0 && idx < actualGridItems.length) {
@@ -373,28 +389,24 @@ function initializeGallery(pageElement) {
     clearTimeout(scrollEndTimer);
     
     scrollEndTimer = setTimeout(() => {
-      // Desktop-specific scroll detection
       if (isDesktop()) {
         const scrollCenter = gridContainer.scrollLeft + (gridContainer.offsetWidth / 2);
         const containerWidth = gridContainer.offsetWidth;
         const scrollLeft = gridContainer.scrollLeft;
         const scrollWidth = gridContainer.scrollWidth;
         
-        // Check if at the end
         if (scrollLeft + containerWidth >= scrollWidth - 5) {
           const lastItem = actualGridItems[actualGridItems.length - 1];
           if (lastItem) {
             setActiveItem(lastItem);
           }
         } 
-        // Check if at the beginning
         else if (scrollLeft <= 5) {
           const firstItem = actualGridItems[0];
           if (firstItem) {
             setActiveItem(firstItem);
           }
         }
-        // Normal center detection
         else {
           let closestItem = null;
           let minDistance = Infinity;
@@ -413,7 +425,6 @@ function initializeGallery(pageElement) {
           }
         }
       } else {
-        // Mobile/Tablet - Original behavior
         if (gridContainer.scrollLeft + gridContainer.clientWidth >= gridContainer.scrollWidth - 5) {
           const lastItem = actualGridItems[actualGridItems.length - 1];
           if (lastItem) {
@@ -470,26 +481,21 @@ function initializeGallery(pageElement) {
       if (gridContainer && item) {
         const itemIndex = actualGridItems.indexOf(item);
         
-        // Desktop-specific scroll behavior
         if (isDesktop()) {
-          // Handle first item
           if (itemIndex === 0) {
             gridContainer.scrollTo({ left: 0, behavior: 'smooth' });
           }
-          // Handle last item
           else if (itemIndex === actualGridItems.length - 1) {
             gridContainer.scrollTo({ 
               left: gridContainer.scrollWidth - gridContainer.offsetWidth, 
               behavior: 'smooth' 
             });
           }
-          // Handle middle items
           else {
             const scrollLeft = item.offsetLeft - (gridContainer.offsetWidth - item.offsetWidth) / 2;
             gridContainer.scrollTo({ left: scrollLeft, behavior: 'smooth' });
           }
         } else {
-          // Mobile/Tablet - Original behavior
           const scrollLeft = item.offsetLeft - (gridContainer.offsetWidth - item.offsetWidth) / 2;
           gridContainer.scrollTo({ left: scrollLeft, behavior: 'smooth' });
         }
@@ -499,7 +505,6 @@ function initializeGallery(pageElement) {
     };
   });
   
-  // Set first item as active on initialization
   if (actualGridItems.length > 0) {
     setActiveItem(actualGridItems[0], false);
   }
@@ -572,29 +577,3 @@ function setViewportHeight() {
 
 setViewportHeight();
 window.addEventListener('resize', setViewportHeight);
-
-// Add lazy loading styles
-const lazyLoadStyles = document.createElement('style');
-lazyLoadStyles.textContent = `
-  img.lazy {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: loading 1.5s infinite;
-    min-height: 200px;
-  }
-  
-  @keyframes loading {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
-  
-  img.lazy-loaded {
-    animation: fadeIn 0.3s ease-in;
-  }
-  
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-`;
-document.head.appendChild(lazyLoadStyles);

@@ -578,29 +578,54 @@ header.visible {
     content: url('/images/HOME_portrait.jpg');
   }
 
-  /* Page 2 Mobile - PERBAIKAN */
+  /* Page 2 Mobile - PERBAIKAN FULL */
   #page2 {
-    padding-top: calc(var(--vh, 1vh) * 8);
-    padding-bottom: calc(var(--vh, 1vh) * 12);
-    justify-content: flex-start;
+    padding-top: calc(var(--vh, 1vh) * 5) !important;
+    padding-bottom: calc(var(--vh, 1vh) * 8) !important;
+    justify-content: flex-start !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    min-height: calc(var(--vh, 1vh) * 100) !important;
+    overflow: visible !important;
   }
 
   .page2-logo {
-    width: 40%;
-    max-width: 150px;
-    margin-bottom: calc(var(--vh, 1vh) * 4);
+    width: 40% !important;
+    max-width: 150px !important;
+    margin-bottom: calc(var(--vh, 1vh) * 4) !important;
+    margin-top: 0 !important;
+    display: block !important;
+    flex-shrink: 0 !important;
   }
 
   #desc {
-    font-size: 0.85rem;
-    line-height: 1.6;
-    padding: 0 6vw;
-    max-height: calc(var(--vh, 1vh) * 55);
-    overflow-y: auto;
+    font-size: 0.8rem !important;
+    line-height: 1.65 !important;
+    padding: 0 8vw !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    max-height: none !important;
+    height: auto !important;
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
+    text-align: center !important;
+    width: 100% !important;
+    max-width: 500px !important;
+    margin: 0 auto !important;
+    display: block !important;
+    flex-shrink: 1 !important;
   }
 
   #desc p {
-    margin-bottom: calc(var(--vh, 1vh) * 1.5);
+    margin-bottom: calc(var(--vh, 1vh) * 1.8) !important;
+    text-align: center !important;
+    letter-spacing: 0.01em !important;
+    width: 100% !important;
+  }
+  
+  #desc p:last-child {
+    margin-bottom: 0 !important;
   }
 
   /* Tap 2 Position - Lebih tinggi agar tidak bertabrakan */
@@ -622,8 +647,8 @@ header.visible {
     overflow-x: hidden;
     overflow-y: auto;
     padding: 3vh 5vw 3vh;
-    gap: 2rem;
-    scroll-snap-type: y proximity;
+    gap: 0.8rem;
+    scroll-snap-type: none;
     scrollbar-width: none;
     height: calc(100vh - 100px);
   }
@@ -639,9 +664,9 @@ header.visible {
     height: auto;
     min-height: unset;
     max-height: 65vh;
-    scroll-snap-align: center;
-    scroll-margin-top: 12vh;
-    scroll-margin-bottom: 12vh;
+    scroll-snap-align: none;
+    scroll-margin-top: 0;
+    scroll-margin-bottom: 0;
     
     transform: scale(1);
     opacity: 1;
@@ -656,15 +681,15 @@ header.visible {
     height: auto;
     max-height: 65vh;
     object-fit: contain;
-    border-radius: 10px;
+    border-radius: 0 !important;
   }
 
   .grid-item:first-child {
-    scroll-margin-top: 15vh;
+    scroll-margin-top: 0;
   }
 
   .grid-item:last-child {
-    scroll-margin-bottom: 15vh;
+    scroll-margin-bottom: 0;
     margin-bottom: 5vh;
   }
 
