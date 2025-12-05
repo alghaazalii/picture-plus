@@ -167,7 +167,7 @@ With our experience, we are ready to help your needs in the field of photography
 
 We began career as a photographer about 17 years ago.<br>During we experienseworking on magazines, tabloids and agency.<br>We have shot commercials, covers, editorials, and many renowned figurer.
 
-Photo or Retouching for :<br>Traveloka, Realme, Sutra, Cosmopolitan, Harper's Baazar,<br>Webull Indonesia, Trax Magazine, Casa Indonesia, ELLE Indonesia, Marie Claire Indonesia,<br>iCreate Indonesia, Marketeer Indonesia, FHM Indonesia, Popular magazine ect.`.trim();
+Photo or Retouching for :<br>Traveloka, Realme, Sutra<br>webull and also High fashion magazine in indonesia<br>`.trim();
 
 function startTextWriter() {
   // PERBAIKAN: Cegah typing ulang jika sedang typing, tapi izinkan jika sudah di-reset

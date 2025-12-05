@@ -397,7 +397,7 @@ header.visible {
   }
 }
 
-/* Mobile/Tablet Gallery Styles - Original */
+/* Mobile/Tablet Gallery Styles - TIDAK DIGUNAKAN LAGI */
 @media (max-width: 768px) {
   .grid-container {
     display: flex;
@@ -633,24 +633,26 @@ header.visible {
     bottom: calc(var(--vh, 1vh) * 5);
   }
 
-  /* Gallery Pages Mobile - PERBAIKAN UTAMA */
+  /* Gallery Pages Mobile - Card background sama dengan page agar tidak terlihat */
   #page3,
   #page4,
   #page5,
   #page6 {
     padding-top: 80px;
     padding-bottom: 20px;
+    background: #fff; /* Background page tetap putih */
   }
 
   .grid-container {
     flex-direction: column;
     overflow-x: hidden;
     overflow-y: auto;
-    padding: 3vh 5vw 3vh;
+    padding: 3vh 5vw 3vh; /* TETAP: Space kanan-kiri 5vw */
     gap: 0.8rem;
     scroll-snap-type: none;
     scrollbar-width: none;
     height: calc(100vh - 100px);
+    background: transparent;
   }
 
   .grid-container::-webkit-scrollbar {
@@ -658,7 +660,7 @@ header.visible {
   }
 
   .grid-item {
-    width: 100%;
+    width: 100%; /* TETAP: Lebar sesuai container (dengan space) */
     min-width: unset;
     max-width: 100%;
     height: auto;
@@ -667,6 +669,7 @@ header.visible {
     scroll-snap-align: none;
     scroll-margin-top: 0;
     scroll-margin-bottom: 0;
+    background: #fff; /* PERBAIKAN: Background card putih sama dengan page */
     
     transform: scale(1);
     opacity: 1;
@@ -690,7 +693,7 @@ header.visible {
 
   .grid-item:last-child {
     scroll-margin-bottom: 0;
-    margin-bottom: 5vh;
+    margin-bottom: 5vh !important;
   }
 
   /* Navigation Arrows Mobile - PERBAIKAN: Tidak ada hover kuning dan animasi */
@@ -880,4 +883,18 @@ img.lazy-loaded {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+/* Responsive Text */
+.mobile-text {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .desktop-text {
+    display: none;
+  }
+  .mobile-text {
+    display: block;
+  }
 }
