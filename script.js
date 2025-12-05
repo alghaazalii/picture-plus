@@ -163,7 +163,7 @@ logoText.addEventListener('animationend', ()=>{
 
 const contentToType=`Hi, we are <span class="highlight">Picture Plus</span>
 
-With our experience, we are ready to help your needs in the field of photography. We make <span class="italicOnly">Commercial, Fashion, Portrait, Architecture, Food & Product Photography.</span>
+With our experience, we are ready to help your needs in the field of photography. We make Commercial, Fashion, Portrait, Architecture, Food & Product Photography.
 
 We began career as a photographer about 17 years ago.<br>During we experienseworking on magazines, tabloids and agency.<br>We have shot commercials, covers, editorials, and many renowned figurer.
 
